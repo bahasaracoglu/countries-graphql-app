@@ -1,7 +1,6 @@
 import { useQuery, gql } from "@apollo/client";
 import React, { useEffect, useState } from "react";
 import SearchComponent from "./SearchComponent";
-import { click } from "@testing-library/user-event/dist/click";
 
 // Şema ile eşleşen bir tür tanımla
 interface Countries {
@@ -53,14 +52,56 @@ const DisplayLocations: React.FC = () => {
   }
   const [selectedRow, setSelectedRow] = useState<string | null>(null);
   const [currentColor, setCurrentColor] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [groupQuery, setGroupQuery] = useState<string>("");
 
   console.log("selectedRow", selectedRow);
+  console.log("searchQuery", searchQuery);
+  console.log("groupQuery", groupQuery);
 
   console.log(currentColor);
 
   useEffect(() => {
     pickRandomColor();
   }, []);
+
+  useEffect(() => {
+    const tenthItemsCode =
+      data?.countries && data.countries.length >= 10
+        ? data.countries[9].code
+        : null;
+    console.log("10th", tenthItemsCode);
+
+    setSelectedRow(tenthItemsCode);
+  }, [data]);
+
+  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const { value } = event.target;
+    const splitSearch = value.split("search:");
+    const splitGroup = value.split("group:");
+    setSearchQuery(value);
+
+    console.log("splitSearch", splitSearch);
+
+    if (splitSearch[1]?.includes("group:")) {
+      console.log("heree");
+      setSearchQuery(splitSearch[1].split("group:")[0].trim());
+    } else {
+      setSearchQuery(splitSearch.length > 1 ? splitSearch[1] : splitSearch[0]);
+    }
+
+    setGroupQuery(splitGroup.length > 1 ? splitGroup[1] : "");
+
+    console.log("splitGroup", splitGroup);
+  };
+
+  const filteredCountries = data?.countries.filter((country) =>
+    Object.values(country).some(
+      (field) =>
+        typeof field === "string" &&
+        field.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+  );
 
   const handleClick = (code: string) => {
     setSelectedRow((prevSelectedRow) => {
@@ -89,7 +130,7 @@ const DisplayLocations: React.FC = () => {
   return (
     <div>
       <div className="flex justify-center p-4">
-        <SearchComponent />
+        <SearchComponent onChange={handleSearchChange} />
       </div>
       <div className="m-2 overflow-scroll md:w-[80%] m-auto">
         <table className="border-collapse border border-slate-400">
@@ -129,7 +170,7 @@ const DisplayLocations: React.FC = () => {
               </th>
             </tr>
           </thead>
-          {data?.countries.map((country, i) => (
+          {filteredCountries?.map((country, i) => (
             <tr
               key={country.code}
               className={country.code === selectedRow ? `${currentColor}` : ""}

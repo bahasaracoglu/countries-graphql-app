@@ -1,4 +1,12 @@
-export default function SearchComponent() {
+// SearchComponent.tsx
+
+import React, { ChangeEvent } from "react";
+
+interface SearchComponentProps {
+  onChange: (event: ChangeEvent<HTMLInputElement>) => void;
+}
+
+const SearchComponent: React.FC<SearchComponentProps> = ({ onChange }) => {
   return (
     <form className="max-w-sm px-4">
       <div className="relative">
@@ -18,10 +26,13 @@ export default function SearchComponent() {
         </svg>
         <input
           type="text"
-          placeholder="search:tt group:size"
+          placeholder="Search..."
           className="w-full py-3 pl-12 pr-4 text-gray-500 border rounded-md outline-none bg-gray-50 focus:bg-white focus:border-indigo-600"
+          onChange={onChange}
         />
       </div>
     </form>
   );
-}
+};
+
+export default SearchComponent;
