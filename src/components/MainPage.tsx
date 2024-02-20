@@ -16,11 +16,14 @@ const DisplayLocations: React.FC = () => {
   const [currentColor, setCurrentColor] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [groupQuery, setGroupQuery] = useState<string>("");
+  const [shouldSelectTenthItem, setShouldSelectTenthItem] =
+    useState<boolean>(true);
+
+  console.log("shouldSelectTenthItem", shouldSelectTenthItem);
 
   console.log("selectedRow", selectedRow);
   // console.log("searchQuery", searchQuery);
   // console.log("groupQuery", groupQuery);
-
   // console.log(currentColor);
 
   useEffect(() => {
@@ -28,13 +31,13 @@ const DisplayLocations: React.FC = () => {
   }, []);
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setShouldSelectTenthItem(true);
     const { value } = event.target;
     const splitSearch = value.split("search:");
     const splitGroup = value.split("group:");
     setSearchQuery(value);
 
-    console.log("splitSearch", splitSearch);
-
+    //console.log("splitSearch", splitSearch);
     if (splitSearch[1]?.includes("group:")) {
       console.log("heree");
       setSearchQuery(splitSearch[1].split("group:")[0].trim());
@@ -70,6 +73,7 @@ const DisplayLocations: React.FC = () => {
     console.log("Previous Selected Row:", selectedRow);
     pickRandomColor();
     setSelectedRow(code);
+    setShouldSelectTenthItem(false);
   };
 
   const pickRandomColor = () => {
@@ -114,18 +118,24 @@ const DisplayLocations: React.FC = () => {
 
     return groupedCountries;
   };
+
   useEffect(() => {
-    if (searchQuery || groupQuery) {
-      // Eğer searchQuery veya groupQuery değerleri varsa filtreleme yapılmış demektir
+    if (shouldSelectTenthItem && (searchQuery || groupQuery)) {
+      // Eğer searchQuery veya groupQuery değerleri varsa veya henüz herhangi bir öğe seçili değilse filtreleme yapılmış demektir
+      //console.log("filtreleme öncesi");
       if (filteredCountries && filteredCountries.length > 0) {
-        const tenthItemsCode =
+        //console.log("filtreleme var");
+
+        const selectedCode =
           filteredCountries.length >= 10
             ? filteredCountries[9].code
             : filteredCountries[filteredCountries.length - 1].code; // Select the last item if there are fewer than 10 items
-        setSelectedRow(tenthItemsCode);
+        setSelectedRow(selectedCode);
+        setShouldSelectTenthItem(false);
       }
     }
-  }, [filteredCountries, searchQuery, groupQuery]);
+  }, [shouldSelectTenthItem, filteredCountries, searchQuery, groupQuery]);
+
   useEffect(() => {
     if (!searchQuery && !groupQuery) {
       // Eğer ne searchQuery ne de groupQuery değerleri varsa (filtreleme yapılmamışsa)
@@ -135,6 +145,7 @@ const DisplayLocations: React.FC = () => {
             ? data.countries[9].code
             : data.countries[data.countries.length - 1].code; // Select the last item if there are fewer than 10 items
         setSelectedRow(tenthItemsCode);
+        setShouldSelectTenthItem(false);
       }
     }
   }, [data, searchQuery, groupQuery]);
@@ -145,21 +156,22 @@ const DisplayLocations: React.FC = () => {
         filteredCountries || []
       )
     : null;
-  useEffect(() => {
-    if (groupQuery && groupedCountries) {
-      console.log("çalıştı");
 
+  //gruplanma durumunda 10th item
+  useEffect(() => {
+    if (shouldSelectTenthItem && groupQuery && groupedCountries) {
+      //console.log("çalıştı");
       const groupedCountriesArray = Object.values(groupedCountries).flat();
       const tenthItemsCode =
         groupedCountriesArray.length >= 10
           ? groupedCountriesArray[9].code
           : groupedCountriesArray[groupedCountriesArray.length - 1].code;
       setSelectedRow(tenthItemsCode);
+      setShouldSelectTenthItem(false);
     }
-  }, [groupQuery, groupedCountries]);
+  }, [groupQuery, groupedCountries, shouldSelectTenthItem]);
 
   if (loading) {
-    // Loading durumu sırasında
     return (
       <div className="flex items-center justify-center h-[80vh]">
         <BounceLoader color="#FF3131" size={80} />
@@ -168,7 +180,7 @@ const DisplayLocations: React.FC = () => {
   }
   if (error) return <p>Error : {error.message}</p>;
 
-  console.log("groupedCountries", groupedCountries);
+  //console.log("groupedCountries", groupedCountries);
 
   return (
     <div className="h-[90vh] bg-white p-4 md:mx-auto rounded-lg shadow-xl  md:w-[85%] lg:w-[80%] ">
